@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
@@ -28,9 +28,43 @@ async function run() {
     await client.connect();
 
     const menuCollection = client.db("bistroDB").collection("menu");
-
+    const reviewCollection = client.db("bistroDB").collection("reviews");
+    const cartCollection = client.db("bistroDB").collection("carts");
+    
+    // menu collection:
     app.get('/menu', async(req, res) => {
         const result = await menuCollection.find().toArray()
+        res.send(result)
+    })
+
+    // reviews:
+    app.get('/reviews', async(req, res) => {
+        const result = await reviewCollection.find().toArray()
+        res.send(result)
+    })
+
+    //cart collection:
+    app.post('/carts', async(req, res) => {
+        const cartData = req.body;
+        const result = await cartCollection.insertOne(cartData)
+        res.send(result)
+    })
+
+    app.get('/carts', async(req, res) => {
+        const email = req.query.email;
+        const query = {email : email}
+        if(!email){
+            return res.send([])
+        }
+        const result = await cartCollection.find(query).toArray()
+        res.send(result)
+    })
+
+    app.delete('/carts/:id', async(req, res) => {
+        const id = req.params.id;
+        // console.log(id);
+        const query = {_id: new ObjectId(id)}
+        const result = await cartCollection.deleteOne(query)
         res.send(result)
     })
 
